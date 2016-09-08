@@ -1,0 +1,96 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+def uglifyDir(magickCmd, sourceDir, destDir) {
+    sourceDir.listFiles().each {imgFile ->
+        if (imgFile.isDirectory()) {
+            FileTree images = fileTree(dir: imgFile.getPath(), includes: ['**/*.jpg', '**/*.png'])
+            File destImgDir = new File(imgFile.getPath().replace(sourceDir.getPath(), destDir.getPath()))
+            if (images.size() > 0 && !destImgDir.exists()) {
+                destImgDir.mkdirs()
+            }
+
+            images.asList().each { imgToProcess ->
+                def destFile = file(destImgDir.getPath() + '/' + imgToProcess.getName())
+                if (!destFile.exists()) {
+                    def uglifyCmd
+                    if (imgToProcess.getPath().endsWith('.png')) {
+                        uglifyCmd = "${magickCmd} -colors 255 ${imgToProcess.getPath()}".execute()
+                    } else  {
+                        uglifyCmd = "${magickCmd} -quality 10 -colors 255 ${imgToProcess.getPath()}".execute()
+                    }
+                    uglifyCmd.waitFor()
+                }
+            }
+        }
+    }
+}
+
+task uglify() {
+    /**
+     *  If {@magickPath} property was not set then scan Path environmental variable and check if ImageMagick's
+     *  path is included.
+     */
+    def magickExecPath
+    if (!project.hasProperty('magickPath')) {
+        String envPath = System.getenv(Os.isFamily(Os.FAMILY_WINDOWS) ? 'Path' : 'PATH')
+        if (envPath != null) {
+            String[] paths = envPath.split(Os.isFamily(Os.FAMILY_WINDOWS) ? ';' : ':')
+            for (String path in paths) {
+                File magickExec = file(path + (Os.isFamily(Os.FAMILY_WINDOWS) ? '/magick.exe' : '/convert'))
+                if (magickExec.exists()) {
+                    magickExecPath = magickExec
+                    break
+                }
+            }
+        }
+
+        if (magickExecPath == null) {
+            throw new GradleException('Magick path is missing')
+        }
+    } else {
+        magickExecPath = magickPath
+    }
+
+    /**
+     *  Create destination flavor directory if it does not exist
+     */
+    def destVariantResDir = file('src/' + destinationVariant + '/res')
+    if (!destVariantResDir.exists()){
+        destVariantResDir.mkdirs()
+    }
+
+    /**
+     *  If source variant has been provided, copy all its files into destination variant directory and
+     *  uglify its resources
+     */
+    def magickCmd = Os.isFamily(Os.FAMILY_WINDOWS) ? "${magickExecPath} mogrify" : magickExecPath
+    if (project.hasProperty('sourceVariant')) {
+        def sourceVariantResDir = file('src/' + sourceVariant + '/res')
+        if (!sourceVariantResDir.exists()) {
+            throw new GradleException('Source variant with given name does not exist')
+        }
+
+        uglifyDir(magickCmd, sourceVariantResDir, destVariantResDir)
+
+        def sourceVariantDir = file('src/' + sourceVariant)
+        def destVariantDir = file('src/' + destinationVariant)
+
+        copy {
+            from sourceVariantDir
+            into destVariantDir
+            exclude { details ->
+                details.file.name.endsWith('.jpg') || details.file.name.endsWith('.png')
+            }
+        }
+    }
+
+    /**
+     *  Uglify resources from main variant
+     */
+    def mainPath = file("src/main/res")
+    uglifyDir(magickCmd, mainPath, destVariantResDir)
+}
+
+afterEvaluate {
+    tasks.getByName('uglify').execute()
+}

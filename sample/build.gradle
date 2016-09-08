@@ -1,0 +1,53 @@
+apply plugin: 'com.android.application'
+
+android {
+    ...
+
+    defaultConfig {
+        ...
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        someCustomBuildType {
+            ...
+        }
+
+        /*
+         * Define separate build variant to build application with ulyfied resources. Do not use any
+         * of your existing variants.
+         */
+        uglified {
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'io.reactivex:rxjava:1.0.10'
+}
+
+/*
+ * Setup script parameters:
+ *  - {@destinationVariant} variant to write uglyfied resources to (required),
+ *  - {@sourceVariant} this is useful when you want to build uglyfied version of one of your custom
+ *      build variants. Script will merge your variant's and main resources (optional),
+ *  - {@magickPath} by default, script searches PATH variable for ImageMagick executable, but if for
+ *      some reason it will not be able to find it, you can specify proper path using this property.
+ */
+ext {
+    destinationVariant = 'uglified'                                 // - required
+    sourceVariant = 'someCustomBuildType'                           // - optional
+//    magickPath = 'C:/Program Files/ImageMagick-7.0.2-Q16/magick'     - optional
+}
+
+/*
+ *  Run uglyfier task
+ */
+apply from: 'uglify.gradle'
