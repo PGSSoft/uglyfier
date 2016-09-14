@@ -35,10 +35,10 @@ dependencies {
 
 /*
  * Setup script parameters:
- *  - {@destinationVariant} variant to write uglyfied resources to (required),
- *  - {@sourceVariant} this is useful when you want to build uglyfied version of one of your custom
- *      build variants. Script will merge your variant's and main resources (optional),
- *  - {@magickPath} by default, script searches PATH variable for ImageMagick executable, but if for
+ *  - {@destinationVariant} (required) variant to write uglyfied resources to,
+ *  - {@sourceVariant} (optional) this is useful when you want to build uglyfied version of one of your custom
+ *      build variants. Script will merge your variant's and main resources,
+ *  - {@magickPath} (optional) by default, script searches PATH variable for ImageMagick executable, but if for
  *      some reason it will not be able to find it, you can specify proper path using this property.
  */
 ext {
@@ -50,4 +50,4 @@ ext {
 /*
  *  Run uglyfier task
  */
-apply from: 'uglify.gradle'
+apply from: 'https://github.com/bstokrockipgs/uglyfier/blob/master/uglify.gradle'
