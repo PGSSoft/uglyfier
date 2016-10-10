@@ -1,9 +1,9 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
-def uglifyDir(magickCmd, sourceDir, destDir) {
+def uglyfyDir(magickCmd, sourceDir, destDir) {
     sourceDir.listFiles().each {imgFile ->
         if (imgFile.isDirectory()) {
-            FileTree images = fileTree(dir: imgFile.getPath(), includes: ['**/*.jpg', '**/*.png'])
+            FileTree images = fileTree(dir: imgFile.getPath(), includes: ['**/*.jpg', '**/*.jpeg', '**/*.png'])
             File destImgDir = new File(imgFile.getPath().replace(sourceDir.getPath(), destDir.getPath()))
             if (images.size() > 0 && !destImgDir.exists()) {
                 destImgDir.mkdirs()
@@ -12,20 +12,20 @@ def uglifyDir(magickCmd, sourceDir, destDir) {
             images.asList().each { imgToProcess ->
                 def destFile = file(destImgDir.getPath() + '/' + imgToProcess.getName())
                 if (!destFile.exists()) {
-                    def uglifyCmd
+                    def uglyfyCmd
                     if (imgToProcess.getPath().endsWith('.png')) {
-                        uglifyCmd = "${magickCmd} -colors 255 ${imgToProcess.getPath()}".execute()
+                        uglyfyCmd = "${magickCmd} -colors 255 ${imgToProcess.getPath()}".execute()
                     } else  {
-                        uglifyCmd = "${magickCmd} -quality 10 -colors 255 ${imgToProcess.getPath()}".execute()
+                        uglyfyCmd = "${magickCmd} -quality 10 -colors 255 ${imgToProcess.getPath()}".execute()
                     }
-                    uglifyCmd.waitFor()
+                    uglyfyCmd.waitFor()
                 }
             }
         }
     }
 }
 
-task uglify() {
+task uglyfy() {
     /**
      *  If {@magickPath} property was not set then scan Path environmental variable and check if ImageMagick's
      *  path is included.
@@ -61,16 +61,14 @@ task uglify() {
 
     /**
      *  If source variant has been provided, copy all its files into destination variant directory and
-     *  uglify its resources
+     *  uglyfy its resources
      */
     def magickCmd = Os.isFamily(Os.FAMILY_WINDOWS) ? "${magickExecPath} mogrify" : magickExecPath
     if (project.hasProperty('sourceVariant')) {
         def sourceVariantResDir = file('src/' + sourceVariant + '/res')
-        if (!sourceVariantResDir.exists()) {
-            throw new GradleException('Source variant with given name does not exist')
+        if (sourceVariantResDir.exists()) {
+            uglyfyDir(magickCmd, sourceVariantResDir, destVariantResDir)
         }
-
-        uglifyDir(magickCmd, sourceVariantResDir, destVariantResDir)
 
         def sourceVariantDir = file('src/' + sourceVariant)
         def destVariantDir = file('src/' + destinationVariant)
@@ -79,18 +77,18 @@ task uglify() {
             from sourceVariantDir
             into destVariantDir
             exclude { details ->
-                details.file.name.endsWith('.jpg') || details.file.name.endsWith('.png')
+                details.file.name.endsWith('.jpg') || details.file.name.endsWith('.jpeg') || details.file.name.endsWith('.png')
             }
         }
     }
 
     /**
-     *  Uglify resources from main variant
+     *  Uglyfy resources from main variant
      */
     def mainPath = file("src/main/res")
-    uglifyDir(magickCmd, mainPath, destVariantResDir)
+    uglyfyDir(magickCmd, mainPath, destVariantResDir)
 }
 
 afterEvaluate {
-    tasks.getByName('uglify').execute()
+    tasks.getByName('uglyfy').execute()
 }

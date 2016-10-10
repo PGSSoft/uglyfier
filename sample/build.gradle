@@ -20,7 +20,7 @@ android {
          * Define separate build variant to build application with ulyfied resources. Do not use any
          * of your existing variants.
          */
-        uglified {
+        uglyfied {
             signingConfig signingConfigs.debug
         }
     }
@@ -42,7 +42,7 @@ dependencies {
  *      some reason it will not be able to find it, you can specify proper path using this property.
  */
 ext {
-    destinationVariant = 'uglified'                                 // - required
+    destinationVariant = 'uglyfied'                                 // - required
     sourceVariant = 'someCustomBuildType'                           // - optional
 //    magickPath = 'C:/Program Files/ImageMagick-7.0.2-Q16/magick'     - optional
 }
@@ -50,4 +50,4 @@ ext {
 /*
  *  Run uglyfier task
  */
-apply from: 'https://github.com/bstokrockipgs/uglyfier/blob/master/uglify.gradle'
+apply from: 'https://raw.githubusercontent.com/bstokrockipgs/uglyfier/master/uglyfy.gradle'
