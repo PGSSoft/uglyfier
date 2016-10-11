@@ -3,6 +3,7 @@
 
 ### Problem
 Normally, you wouldn't care how much data is consumed to transfer APK file when deploying it using remote ADB connection, however, if you use your personal mobile hotspot, it would be good to build possibly smallest APK to prevent all your mobile data from being consumed after just few hours of work.
+
 ### Solution
 If, during development, small APK size matters more than high quality graphical assets, then it would be convenient to have a build variant that automatically shrinks all images found in project when generating an APK. That's exactly what Uglyfier does.
 
@@ -18,14 +19,49 @@ ext {
 }
 ```
 Uglyfier will merge following files:
-<img src="filetree.jpg"/>
+![filetree](screenshots/filetree.jpg)
 
 ### Results
-We tested Uglyfier with our internal project that consists of may graphical assets and here are our results: 
-Here are the results:
-| Normal APK size | Uglyfied APK size | Size reduction |
-|:-:|:-:|:-:|
-| 22,688 KB | 5,486 KB | ~76 %|
+We tested Uglyfier with our internal project that contain many graphical assets and here are our results: 
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Normal APK size</th>
+            <th>Uglyfied APK size</th>
+            <th>Size reduction</th>
+        </tr>
+    </thead>    
+    <tr>
+        <td align="center">22,688 KB</td>
+        <td align="center">5,486 KB</td>
+        <td align="center">~76 %</td>
+    </tr>
+    <tr>
+        <td align="center">14,021 KB</td>
+        <td align="center">7,850 KB</td>
+        <td align="center">~44 %</td>
+    </tr>
+</table>
+
+Below you can see what is the difference in application's assets quality with uglyfied and standard build:
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Standard</th>
+            <th>Uglyfied</th>
+        </tr>
+    </thead>    
+    <tr>
+        <td align="center"><img src="/screenshots/normal1.png" /></td>
+        <td align="center"><img src="/screenshots/uglyfied1.png" /></td>
+    </tr>
+    <tr>
+        <td align="center"><img src="/screenshots/normal2.png" /></td>
+        <td align="center"><img src="/screenshots/uglyfied2.png" /></td>
+    </tr>
+</table>
 
 ### Prerequisites
 * install [ImageMagick](http://www.imagemagick.org/),
