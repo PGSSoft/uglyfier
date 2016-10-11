@@ -19,7 +19,7 @@ ext {
 }
 ```
 Uglyfier will merge following files:
-![filetree](screenshots/filetree.jpg)
+<img style="display: block" src="/screenshots/filetree.png"/>
 
 ### Results
 We tested Uglyfier with our internal project that contain many graphical assets and here are our results: 
@@ -49,17 +49,14 @@ Below you can see what is the difference in application's assets quality with ug
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>Standard</th>
-            <th>Uglyfied</th>
+            <th>Standard (top) / Uglyfied (bottom)</th>
         </tr>
     </thead>    
     <tr>
-        <td align="center"><img src="/screenshots/normal1.png" /></td>
-        <td align="center"><img src="/screenshots/uglyfied1.png" /></td>
+        <td align="center"><img src="/screenshots/normal1.png" /><img src="/screenshots/uglyfied1.png" /></td>
     </tr>
     <tr>
-        <td align="center"><img src="/screenshots/normal2.png" /></td>
-        <td align="center"><img src="/screenshots/uglyfied2.png" /></td>
+        <td align="center"><img src="/screenshots/normal2.png" /><img src="/screenshots/uglyfied2.png" /></td>
     </tr>
 </table>
 
