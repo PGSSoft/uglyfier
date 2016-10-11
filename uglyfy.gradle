@@ -14,9 +14,9 @@ def uglyfyDir(magickCmd, sourceDir, destDir) {
                 if (!destFile.exists()) {
                     def uglyfyCmd
                     if (imgToProcess.getPath().endsWith('.png')) {
-                        uglyfyCmd = "${magickCmd} -colors 255 ${imgToProcess.getPath()}".execute()
+                        uglyfyCmd = "${magickCmd} ${imgToProcess.getPath()} -colors 255 ${destFile.getPath()}".execute()
                     } else  {
-                        uglyfyCmd = "${magickCmd} -quality 10 -colors 255 ${imgToProcess.getPath()}".execute()
+                        uglyfyCmd = "${magickCmd} ${imgToProcess.getPath()} -quality 10 -colors 255 ${destFile.getPath()}".execute()
                     }
                     uglyfyCmd.waitFor()
                 }
@@ -63,7 +63,7 @@ task uglyfy() {
      *  If source variant has been provided, copy all its files into destination variant directory and
      *  uglyfy its resources
      */
-    def magickCmd = Os.isFamily(Os.FAMILY_WINDOWS) ? "${magickExecPath} mogrify" : magickExecPath
+    def magickCmd = Os.isFamily(Os.FAMILY_WINDOWS) ? "${magickExecPath} convert" : magickExecPath
     if (project.hasProperty('sourceVariant')) {
         def sourceVariantResDir = file('src/' + sourceVariant + '/res')
         if (sourceVariantResDir.exists()) {
