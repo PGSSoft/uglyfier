@@ -19,7 +19,7 @@ ext {
 }
 ```
 Uglyfier will merge following files:
-<img style="display: block" src="/screenshots/filetree.png"/>
+<img style="display: block" src="/screenshots/filetree.jpg"/>
 
 ### Results
 We tested Uglyfier with our internal project that contain many graphical assets and here are our results: 
