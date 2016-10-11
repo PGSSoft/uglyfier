@@ -18,11 +18,11 @@ ext {
     sourceVariant = 'signedDebug'
 }
 ```
-Uglyfier will merge following files:
+Uglyfier will merge following files: </br>
 <img style="display: block" src="/screenshots/filetree.jpg"/>
 
 ### Results
-We tested Uglyfier with our internal project that contain many graphical assets and here are our results: 
+We tested Uglyfier with our internal projects that contain many graphical assets and here are our results: 
 
 <table class="table table-bordered table-striped">
     <thead>
