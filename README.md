@@ -1,3 +1,5 @@
+![PGS Software](screenshots/pgssoft-madewithlove.png)
+
 # Uglyfier for Android
 ##### Gradle script for downsizing graphical assets in development builds
 
@@ -63,3 +65,23 @@ Below you can see what is the difference in application's assets quality with ug
 ### Prerequisites
 * install [ImageMagick](http://www.imagemagick.org/),
 * take a look at sample [build.gradle](sample/build.gradle) file.
+
+
+
+### Contributing
+
+Bug reports and pull requests are welcome on GitHub at [https://github.com/PGSSoft/uglyfier](https://github.com/PGSSoft/uglyfier).
+
+### License
+
+The project is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+
+### About
+
+The project maintained by [software development agency](https://www.pgs-soft.com/) [PGS Software](https://www.pgs-soft.com/).
+See our other [open-source projects](https://github.com/PGSSoft) or [contact us](https://www.pgs-soft.com/contact-us/) to develop your product.
+
+### Follow us
+
+[![Twitter URL](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=https://github.com/PGSSoft/uglyfier)  
+[![Twitter Follow](https://img.shields.io/twitter/follow/pgssoftware.svg?style=social&label=Follow)](https://twitter.com/pgssoftware)
