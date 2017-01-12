@@ -1,6 +1,143 @@
-import org.apache.tools.ant.taskdefs.condition.Os
+/**
+ Uglyfier for Android
+ Copyright (c) 2017 PGS Software SA
+ https://github.com/PGSSoft/uglyfier
 
-def uglyfyDir(magickCmd, sourceDir, destDir) {
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+ to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial portions
+ of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
+
+
+ author: Bartosz Stokrocki, PGS Software SA
+ author: Tomasz Zielinski, PGS Software SA
+
+ usage: refer to https://github.com/PGSSoft/uglyfier for details
+ in short, paste and edit following snippet to your gradle.build:
+
+ -------------------------------
+ ext {
+     UglyfierSourceVariant      = 'debug'    // this is the source build type
+     UglyfierDestinationVariant = 'uglyfied'  // this is the target, uglyfied build type
+
+     // provide path to Imagemagick here
+     // (or remove this line and set IMAGEMAGICK_EXECUTABLE environment variable
+     UglyfierImagemagickPath = 'c:/Program Files/ImageMagick-7.0.1-10-portable-Q16-x86/magick.exe' //sample value for Windows //UglyfierImagemagickPath = '/usr/bin/convert' //sample value for Linux
+ }
+ -------------------------------
+
+*/
+
+
+// parametrisation
+project.ext {
+    UglyfierMinimumImageFileLength = 5*1024  // do not uglify files smaller than 5KB
+}
+
+clean.doFirst {
+    /**
+     *  Delete destination flavor resource directory on clean
+     */
+    if (false == project.hasProperty('UglyfierDestinationVariant')){
+        throw new GradleException('UglyfierSourceVariant and UglyfierDestinationVariant variables must be set to have resources uglified')
+    }
+    def destVariantResDir = file('src/' + UglyfierDestinationVariant + '/res')
+    if (destVariantResDir.exists()){
+        delete destVariantResDir
+        println "Directory $destVariantResDir deleted by uglyfier"
+    }
+}
+
+clean.doLast{
+    tasks.getByName('uglyfy').execute()
+}
+
+
+
+task uglyfy() {
+
+    println "Start uglyfying images"
+
+    /*
+     *  Parametrisation is required
+     */
+    if (false == project.hasProperty('UglyfierSourceVariant') || false == project.hasProperty('UglyfierDestinationVariant')){
+        throw new GradleException('UglyfierSourceVariant and UglyfierDestinationVariant variables must be set to have resources uglified')
+    }
+
+    /**
+     *  ImageMagick executable can be provided as UglyfierImagemagickPath variable or
+     *  through IMAGEMAGICK_EXECUTABLE environment variable
+     */
+    def magickExecPath
+    if (!project.hasProperty('UglyfierImagemagickPath')) {
+        String magickEnv = System.getenv('IMAGEMAGICK_EXECUTABLE')
+        if (magickEnv != null) {
+            File magickExec = file(magickEnv)
+            if (magickExec.exists()) {
+                magickExecPath = magickExec
+            }
+        }
+        if (magickExecPath == null) {
+            throw new GradleException('Imagemagic executable unknown, set IMAGEMAGICK_EXECUTABLE or magickPath variable in gradle config file')
+        }
+    } else {
+        File magickExec = file(UglyfierImagemagickPath)
+        if (false == magickExec.exists() || false == magickExec.canExecute()) {
+            throw new GradleException('Imagemagic executable not found at location: %1', magickPath)
+        }
+        magickExecPath = UglyfierImagemagickPath
+    }
+
+    def mainPathRes = file("src/main/res")                              // main resource dir
+    def sourceVariantDir = file('src/' + UglyfierSourceVariant)         // source dir
+    def destVariantDir = file('src/' + UglyfierDestinationVariant)      // destination dir
+    def destVariantResDir = file('src/' + UglyfierDestinationVariant + '/res')  // destination RES dir
+
+    /**
+     *  Create destination flavor directory if it does not exist
+     */
+    if (!destVariantDir.exists()){
+        destVariantDir.mkdirs()
+    }
+    if (!destVariantResDir.exists()){
+        destVariantResDir.mkdirs()
+    }
+    copyAndUglifyImages(magickExecPath, mainPathRes, destVariantResDir)
+
+
+    /**
+     *  If source variant has been provided, copy all its files into destination variant directory and
+     *  uglyfy its resources
+     */
+    def sourceVariantResDir = file('src/' + UglyfierSourceVariant + '/res')
+    if (sourceVariantResDir.exists()) {
+        copyAndUglifyImages(magickExecPath, sourceVariantResDir, destVariantResDir)
+
+        copy {
+            from sourceVariantDir
+            into destVariantDir
+            exclude { details ->
+                details.file.name.toLowerCase().endsWith('.jpg') ||
+                        details.file.name.toLowerCase().endsWith('.jpeg') ||
+                        details.file.name.toLowerCase().endsWith('.png')
+            }
+        }
+    }
+}
+
+
+def copyAndUglifyImages(magickExecPath, sourceDir, destDir) {
+
     sourceDir.listFiles().each {imgFile ->
         if (imgFile.isDirectory()) {
             FileTree images = fileTree(dir: imgFile.getPath(), includes: ['**/*.jpg', '**/*.jpeg', '**/*.png'])
@@ -11,84 +148,70 @@ def uglyfyDir(magickCmd, sourceDir, destDir) {
 
             images.asList().each { imgToProcess ->
                 def destFile = file(destImgDir.getPath() + '/' + imgToProcess.getName())
-                if (!destFile.exists()) {
-                    def uglyfyCmd
-                    if (imgToProcess.getPath().endsWith('.png')) {
-                        uglyfyCmd = "${magickCmd} ${imgToProcess.getPath()} -colors 255 ${destFile.getPath()}".execute()
-                    } else  {
-                        uglyfyCmd = "${magickCmd} ${imgToProcess.getPath()} -quality 10 -colors 255 ${destFile.getPath()}".execute()
+
+                if (imgToProcess.size() < UglyfierMinimumImageFileLength){
+                    copy {
+                        from imgToProcess
+                        into destImgDir.getPath()
                     }
-                    uglyfyCmd.waitFor()
+                } else {
+
+                    def uglyfyCmd
+
+                    if (imgToProcess.getPath().endsWith('.9.png')) { // 9-patch case
+
+                        // shave ninepatch 1-pixel frame
+                        uglyfyCmd = "${magickExecPath} ${imgToProcess.getPath()} -shave 1x1 ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+
+                        // save size of shaved image
+                        def savedImageSize = new ByteArrayOutputStream()
+                        exec {
+                            commandLine "${magickExecPath}"
+                            args "${destFile.getPath()}", "-format", "%wx%h", "info:"
+                            standardOutput = savedImageSize;
+                        }
+
+                        // downscale image to 10%
+                        uglyfyCmd = "${magickExecPath} ${destFile.getPath()} -scale 10% ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+
+                        // upscale image to original (shaved) size
+                        uglyfyCmd = "${magickExecPath} ${destFile.getPath()} -scale $savedImageSize! ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+
+                        // draw upscaled image on top of original ninepatch (thus restoring ninepatch frame)
+                        uglyfyCmd = "${magickExecPath} ${imgToProcess.getPath()} ${destFile.getPath()} -compose Copy -gravity Center -composite ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+
+
+                    } else if (imgToProcess.getPath().endsWith('.png')) {  // PNG case
+
+                        // save image size
+                        def savedImageSize = new ByteArrayOutputStream()
+                        exec {
+                            commandLine "${magickExecPath}"
+                            args "${imgToProcess.getPath()}", "-format", "%wx%h", "info:"
+                            standardOutput = savedImageSize;
+                        }
+
+                        // downscale image to 10%
+                        uglyfyCmd = "${magickExecPath} ${imgToProcess.getPath()} -scale 10% ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+
+                        // upscale image to original (shaved) size
+                        uglyfyCmd = "${magickExecPath} ${destFile.getPath()} -scale $savedImageSize! ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+
+                    } else { // JPG case
+
+                        // recompress heavily
+                        uglyfyCmd = "${magickExecPath} ${imgToProcess.getPath()} -quality 5 ${destFile.getPath()}".execute()
+                        uglyfyCmd.waitFor()
+                    }
                 }
             }
         }
     }
 }
 
-task uglyfy() {
-    /**
-     *  If {@magickPath} property was not set then scan Path environmental variable and check if ImageMagick's
-     *  path is included.
-     */
-    def magickExecPath
-    if (!project.hasProperty('magickPath')) {
-        String envPath = System.getenv(Os.isFamily(Os.FAMILY_WINDOWS) ? 'Path' : 'PATH')
-        if (envPath != null) {
-            String[] paths = envPath.split(Os.isFamily(Os.FAMILY_WINDOWS) ? ';' : ':')
-            for (String path in paths) {
-                File magickExec = file(path + (Os.isFamily(Os.FAMILY_WINDOWS) ? '/magick.exe' : '/convert'))
-                if (magickExec.exists()) {
-                    magickExecPath = magickExec
-                    break
-                }
-            }
-        }
-
-        if (magickExecPath == null) {
-            throw new GradleException('Magick path is missing')
-        }
-    } else {
-        magickExecPath = magickPath
-    }
-
-    /**
-     *  Create destination flavor directory if it does not exist
-     */
-    def destVariantResDir = file('src/' + destinationVariant + '/res')
-    if (!destVariantResDir.exists()){
-        destVariantResDir.mkdirs()
-    }
-
-    /**
-     *  If source variant has been provided, copy all its files into destination variant directory and
-     *  uglyfy its resources
-     */
-    def magickCmd = Os.isFamily(Os.FAMILY_WINDOWS) ? "${magickExecPath} convert" : magickExecPath
-    if (project.hasProperty('sourceVariant')) {
-        def sourceVariantResDir = file('src/' + sourceVariant + '/res')
-        if (sourceVariantResDir.exists()) {
-            uglyfyDir(magickCmd, sourceVariantResDir, destVariantResDir)
-        }
-
-        def sourceVariantDir = file('src/' + sourceVariant)
-        def destVariantDir = file('src/' + destinationVariant)
-
-        copy {
-            from sourceVariantDir
-            into destVariantDir
-            exclude { details ->
-                details.file.name.endsWith('.jpg') || details.file.name.endsWith('.jpeg') || details.file.name.endsWith('.png')
-            }
-        }
-    }
-
-    /**
-     *  Uglyfy resources from main variant
-     */
-    def mainPath = file("src/main/res")
-    uglyfyDir(magickCmd, mainPath, destVariantResDir)
-}
-
-afterEvaluate {
-    tasks.getByName('uglyfy').execute()
-}
