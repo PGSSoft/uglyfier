@@ -52,19 +52,6 @@ JPEG files are heavily recompressed, with target quality equal 5. Compression ar
 
 PNG files are downsized to 10% of size, then scaled back. Big pixel blocks are expected. **Ninepatch (9-patch) files are fully supported, 1-pixel frame is preserved!**
 
-Uglyfier is a gradle script that can be applied during build process. It uses specified build variant directory for its output, so the original files remain untouched. It scans whole project looking for image files (jpg and png) and depending on file type - reduces its quality (for jpg images) or used number of colors (for png) using [ImageMagick](http://www.imagemagick.org/). After saving all the images in a seperate build variant directory, build task proceeds and the downsized APK is generated.
-
-Uglyfier automatically merges all files necessary to build project. You can specifiy source build variant to include its files during merge. For example, for following configuration:
-
-```groovy
-ext {
-    destinationVariant = 'uglyfied'
-    sourceVariant = 'debug'
-}
-```
-Uglyfier will merge following files: </br>
-<img style="display: block" src="/screenshots/filetree.jpg"/>
-
 ### Results
 We tested Uglyfier with our internal projects that contain many graphical assets and here are our results: 
 
@@ -97,10 +84,16 @@ Below you can see what is the difference in application's assets quality with ug
         </tr>
     </thead>    
     <tr>
-        <td align="center"><img src="/screenshots/normal1.png" /><img src="/screenshots/uglyfied1.png" /></td>
+        <td align="center"><img src="/screenshots/mixed1.png" /></td>
     </tr>
     <tr>
-        <td align="center"><img src="/screenshots/normal2.png" /><img src="/screenshots/uglyfied2.png" /></td>
+        <td align="center"><img src="/screenshots/mixed2.png" /></td>
+    </tr>
+    <tr>
+        <td align="center"><img src="/screenshots/mixed3.png" /></td>
+    </tr>
+    <tr>
+        <td align="center"><img src="/screenshots/mixed4.png" /></td>
     </tr>
 </table>
 
