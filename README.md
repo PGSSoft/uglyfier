@@ -4,12 +4,54 @@
 ##### Gradle script for downsizing graphical assets in development builds
 
 ### Problem
-Normally, you wouldn't care how much data is consumed to transfer APK file when deploying it using remote ADB connection, however, if you use your personal mobile hotspot, it would be good to build possibly smallest APK to prevent all your mobile data from being consumed after just few hours of work.
+Usually you won't care how big the deployed APK file is. However, if you are using metered connection and remote ADB, it would be good idea to build possibly smallest APK package.
 
 ### Solution
-If, during development, small APK size matters more than high quality graphical assets, then it would be convenient to have a build variant that automatically shrinks all images found in project when generating an APK. That's exactly what Uglyfier does.
+Uglyfier for Android is a gradle script which will shring all image resources in your application during build. It will look ugly, but image files will be 10 times smaller. **Ninepatch (9-patch) PNGs are fully supported!**
 
-### How does it work?
+### Installation
+
+1. Install [ImageMagick](https://www.imagemagick.org)
+2. Download [uglyfy.gradle](https://raw.githubusercontent.com/tomekziel/uglyfier/master/uglyfy.gradle) and save it to application directory (where `build.gradle` live)
+3. Create new buildType, i.e. "uglyfied". You can define it to inherit existing one:
+    ```groovy
+    buildTypes {
+        debug {
+            debuggable true
+        }
+
+        uglyfied.initWith(buildTypes.debug)
+        uglyfied{}
+    ```
+4. Add following snippet to your `build.gradle`, adjusting all three variables.
+    ```groovy
+    
+    ext {
+        UglyfierSourceVariant      = 'debug'     // this is the source build type
+        UglyfierDestinationVariant = 'uglyfied'  // this is the target, uglyfied build type
+
+        // provide path to Imagemagick here
+        // (or remove this line and set IMAGEMAGICK_EXECUTABLE environment variable
+        UglyfierImagemagickPath = 'c:/Program Files/ImageMagick-7.0.1-10-portable-Q16-x86/magick.exe' //sample value for Windows
+        //UglyfierImagemagickPath = '/usr/bin/convert' //sample value for Linux
+    }
+    apply from: 'uglyfy.gradle'    
+    ```
+5. Try to build new "uglyfied" variant.
+
+
+### What will happen?
+During build following events will take place:
+1. Image files (PNG, JPG, JPEG) from "main" source directory will be copied to "uglyfied" resource directory, then downsized.
+2. Image files from source variant (i.e. "debug") will be also copied to "uglyfied" resource directory, then downsized.
+3. Any extra resource files from source variant (i.e. "debug") will be also copied to "uglyfied" resource directory.
+
+### How the downsizing works?
+
+JPEG files are heavily recompressed, with target quality equal 5. Compression artifacts are expected.
+
+PNG files are downsized to 10% of size, then scaled back. Big pixel blocks are expected. **Ninepatch (9-patch) files are fully supported, 1-pixel frame is preserved!**
+
 Uglyfier is a gradle script that can be applied during build process. It uses specified build variant directory for its output, so the original files remain untouched. It scans whole project looking for image files (jpg and png) and depending on file type - reduces its quality (for jpg images) or used number of colors (for png) using [ImageMagick](http://www.imagemagick.org/). After saving all the images in a seperate build variant directory, build task proceeds and the downsized APK is generated.
 
 Uglyfier automatically merges all files necessary to build project. You can specifiy source build variant to include its files during merge. For example, for following configuration:
@@ -17,7 +59,7 @@ Uglyfier automatically merges all files necessary to build project. You can spec
 ```groovy
 ext {
     destinationVariant = 'uglyfied'
-    sourceVariant = 'signedDebug'
+    sourceVariant = 'debug'
 }
 ```
 Uglyfier will merge following files: </br>
@@ -61,11 +103,6 @@ Below you can see what is the difference in application's assets quality with ug
         <td align="center"><img src="/screenshots/normal2.png" /><img src="/screenshots/uglyfied2.png" /></td>
     </tr>
 </table>
-
-### Prerequisites
-* install [ImageMagick](http://www.imagemagick.org/),
-* take a look at sample [build.gradle](sample/build.gradle) file.
-
 
 
 ### Contributing
