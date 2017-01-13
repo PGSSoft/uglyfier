@@ -7,7 +7,7 @@
 Usually you don't care how big the deployed APK is. However, if you are using metered connection and remote ADB, it would be good idea to build possibly smallest APK file.
 
 ### Solution
-Uglyfier for Android is a gradle script which will shring all image resources in your application during build. It will look ugly, but image files will be 10 times smaller. **Ninepatch (9-patch) PNGs are fully supported, with transparency preserved!**
+Uglyfier for Android is a gradle script which will shrink all image resources in your application during build. It will look ugly, but image files will be 10 times smaller. **Ninepatch (9-patch) PNGs are fully supported, with transparency preserved!**
 
 ### Installation
 
