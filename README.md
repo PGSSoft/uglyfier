@@ -42,6 +42,7 @@ Uglyfier for Android is a gradle script which will shring all image resources in
 
 ### What will happen?
 During build following events will take place:
+
 1. Image files (PNG, JPG, JPEG) from "main" resource directory will be copied to "uglyfied" resource directory, then downsized.
 2. Image files from source variant (i.e. "debug") will be also copied to "uglyfied" resource directory, then downsized.
 3. Any extra resource files from source variant (i.e. "debug") will be also copied to "uglyfied" resource directory.
