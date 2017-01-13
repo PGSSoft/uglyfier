@@ -4,10 +4,10 @@
 ##### Gradle script for downsizing graphical assets in development builds
 
 ### Problem
-Usually you won't care how big the deployed APK file is. However, if you are using metered connection and remote ADB, it would be good idea to build possibly smallest APK package.
+Usually you don't care how big the deployed APK is. However, if you are using metered connection and remote ADB, it would be good idea to build possibly smallest APK file.
 
 ### Solution
-Uglyfier for Android is a gradle script which will shring all image resources in your application during build. It will look ugly, but image files will be 10 times smaller. **Ninepatch (9-patch) PNGs are fully supported!**
+Uglyfier for Android is a gradle script which will shring all image resources in your application during build. It will look ugly, but image files will be 10 times smaller. **Ninepatch (9-patch) PNGs are fully supported, with transparency preserved!**
 
 ### Installation
 
@@ -42,15 +42,17 @@ Uglyfier for Android is a gradle script which will shring all image resources in
 
 ### What will happen?
 During build following events will take place:
-1. Image files (PNG, JPG, JPEG) from "main" source directory will be copied to "uglyfied" resource directory, then downsized.
+1. Image files (PNG, JPG, JPEG) from "main" resource directory will be copied to "uglyfied" resource directory, then downsized.
 2. Image files from source variant (i.e. "debug") will be also copied to "uglyfied" resource directory, then downsized.
 3. Any extra resource files from source variant (i.e. "debug") will be also copied to "uglyfied" resource directory.
 
 ### How the downsizing works?
 
-JPEG files are heavily recompressed, with target quality equal 5. Compression artifacts are expected.
+JPEG files are heavily recompressed, with target quality=5. Compression artifacts are expected.
 
-PNG files are downsized to 10% of size, then scaled back. Big pixel blocks are expected. **Ninepatch (9-patch) files are fully supported, 1-pixel frame is preserved!**
+PNG files are downsized to 10% of size, then scaled back. Big pixel blocks are expected. **Ninepatch (9-patch) files are fully supported, 1-pixel frame is preserved! (as well as transparency)**
+
+Files smaller than 5KB are skipped.
 
 ### Results
 We tested Uglyfier with our internal projects that contain many graphical assets and here are our results: 
@@ -58,20 +60,20 @@ We tested Uglyfier with our internal projects that contain many graphical assets
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>Normal APK size</th>
-            <th>Uglyfied APK size</th>
+            <th>Normal image resources size</th>
+            <th>Uglyfied image resources size</th>
             <th>Size reduction</th>
         </tr>
     </thead>    
     <tr>
-        <td align="center">22,688 KB</td>
-        <td align="center">5,486 KB</td>
-        <td align="center">~76 %</td>
+        <td align="center">18124 KB</td>
+        <td align="center">3060 KB</td>
+        <td align="center">83%</td>
     </tr>
     <tr>
-        <td align="center">14,021 KB</td>
-        <td align="center">7,850 KB</td>
-        <td align="center">~44 %</td>
+        <td align="center">9258 KB</td>
+        <td align="center">861 KB</td>
+        <td align="center">91%</td>
     </tr>
 </table>
 
@@ -97,6 +99,10 @@ Below you can see what is the difference in application's assets quality with ug
     </tr>
 </table>
 
+### TODO
+
+ * [ ] Better build event injection than `clean.doLast`
+ * [ ] Re-uglyfying based on file modification time, not every time
 
 ### Contributing
 
